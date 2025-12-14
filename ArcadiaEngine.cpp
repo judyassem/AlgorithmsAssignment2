@@ -75,17 +75,167 @@ public:
 
 class ConcreteAuctionTree : public AuctionTree {
 private:
-    // TODO: Define your Red-Black Tree node structure
     // Hint: Each node needs: id, price, color, left, right, parent pointers
+    struct RBTNode {
+        int id;
+        int price;
+        bool is_black;
+        RBTNode *left;
+        RBTNode *right;
+        RBTNode *parent;
+    };
+
+    RBTNode *root;
+
+    void rotateToLeft(RBTNode *&root) {
+        if (root == nullptr)
+            cout << "Error in the tree" << endl;
+        else if (root->right == nullptr)
+            cout << "Error in the tree: No right subtree to rotate." << endl;
+
+        else {
+            RBTNode *rightNode = root->right; //pointer to the root of the right subtree of root
+            root->right = rightNode->left; //the left subtree of  rightNode become the right subtree of root
+            if (root->right != nullptr)
+                root->right->parent = root;
+
+            rightNode->left = root;
+            rightNode->parent = root->parent;
+
+            if (rightNode->parent != nullptr) {
+                // if the nodes im dealing with are a subtree of a bigger one
+                if (rightNode->parent->left == root) // is a left subtree
+                    rightNode->parent->left = rightNode;
+                else
+                    rightNode->parent->right = rightNode;
+            }
+
+            root->parent = rightNode;
+            root = rightNode; //make rightNode the new root node
+        }
+    }
+
+    void rotateToRight(RBTNode *&root) {
+        if (root == nullptr)
+            cout << "Error in the tree" << endl;
+        else if (root->left == nullptr)
+            cout << "Error in the tree: No left subtree to rotate." << endl;
+
+        else {
+            RBTNode *leftNode = root->left;
+            root->left = leftNode->right; //the right subtree of  leftNode becomes the left subtree of root
+
+            if (root->left != nullptr)
+                root->left->parent = root;
+
+            leftNode->right = root;
+            leftNode->parent = root->parent;
+
+            if (leftNode->parent != nullptr) {
+                // if the nodes im dealing with are a subtree of a bigger one
+                if (leftNode->parent->right == root) // is a left subtree
+                    leftNode->parent->right = leftNode;
+                else
+                    leftNode->parent->left = leftNode;
+            }
+
+            root->parent = leftNode;
+            root = leftNode; //make  leftNode the new root node
+        }
+    }
+
+    RBTNode *insert(int itemID, int itemPrice) {
+        RBTNode *current;
+        RBTNode *tc = nullptr;
+        auto *newNode = new RBTNode();
+
+        //making the new node
+        if (newNode != nullptr) {
+            newNode->id = itemID;
+            newNode->price = itemPrice;
+            newNode->left = nullptr;
+            newNode->right = nullptr;
+            newNode->parent = nullptr;
+        } else {
+            cout << "Error in the tree" << endl;
+        }
+
+        if (root == nullptr) {
+            root = newNode;
+        } else {
+            current = root;
+            while (current != nullptr) {
+                tc = current;
+                if (current->price == itemPrice) {
+                    // TODO handle duplicate price
+                }
+                if (current->price < itemPrice) {
+                    current = current->right;
+                } else {
+                    current = current->left;
+                }
+            }
+            if (tc->price < itemPrice) {
+                tc->right = newNode;
+                newNode->parent = tc;
+            } else {
+                tc->left = newNode;
+                newNode->parent = tc;
+            }
+        }
+        return newNode;
+    }
 
 public:
     ConcreteAuctionTree() {
-        // TODO: Initialize your Red-Black Tree
+        root = nullptr;
     }
 
     void insertItem(int itemID, int price) override {
-        // TODO: Implement Red-Black Tree insertion
         // Remember to maintain RB-Tree properties with rotations and recoloring
+        RBTNode *newNode = insert(itemID, price);
+        newNode->is_black = false; // first insert red node
+        while (newNode != root && newNode->parent->is_black == false) { // parent is red so there is violation
+
+            if (newNode->parent == newNode->parent->parent->left) { // node is left of a left parent so uncle is right
+                RBTNode *uncle = newNode->parent->parent->right;
+                if (uncle->is_black == false) { // case 1
+                    newNode->parent->is_black = true;
+                    uncle->is_black = true;
+                    newNode->parent->parent->is_black = false;
+                    newNode = newNode->parent->parent;
+                } else {
+                    if (newNode == newNode->parent->right) { // case 2 (near child)
+                        newNode = newNode->parent; ///+++++++++++might be wrong+++++++++++++++++++++++++++++++++++++++++++++++
+                        rotateToLeft(newNode);
+                    } else { // case 3 (far child)
+                        newNode->parent->is_black = true;
+                        newNode->parent->parent->is_black = false;
+                        rotateToRight(newNode->parent->parent);
+                    }
+                }
+            } else {
+                RBTNode *uncle = newNode->parent->parent->left;
+                if (uncle->is_black == false) {
+                    newNode->parent->is_black = true;
+                    uncle->is_black = true;
+                    newNode->parent->parent->is_black = false;
+                    newNode = newNode->parent->parent;
+                } else {
+                    if (newNode == newNode->parent->left) {
+                        newNode = newNode->parent;
+                        rotateToRight(newNode);
+                    } else {
+                        newNode->parent->is_black = true;
+                        newNode->parent->parent->is_black = false;
+                        rotateToLeft(newNode->parent->parent);
+                    }
+                }
+            }
+        }
+        if (root == newNode) {
+            root->is_black = true;
+        }
     }
 
     void deleteItem(int itemID) override {
@@ -98,14 +248,14 @@ public:
 // PART B: INVENTORY SYSTEM (Dynamic Programming)
 // =========================================================
 
-int InventorySystem::optimizeLootSplit(int n, vector<int>& coins) {
+int InventorySystem::optimizeLootSplit(int n, vector<int> &coins) {
     // TODO: Implement partition problem using DP
     // Goal: Minimize |sum(subset1) - sum(subset2)|
     // Hint: Use subset sum DP to find closest sum to total/2
     return 0;
 }
 
-int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int>>& items) {
+int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int> > &items) {
     // TODO: Implement 0/1 Knapsack using DP
     // items = {weight, value} pairs
     // Return maximum value achievable within capacity
@@ -124,14 +274,14 @@ long long InventorySystem::countStringPossibilities(string s) {
 // PART C: WORLD NAVIGATOR (Graphs)
 // =========================================================
 
-bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, int dest) {
+bool WorldNavigator::pathExists(int n, vector<vector<int> > &edges, int source, int dest) {
     // TODO: Implement path existence check using BFS or DFS
     // edges are bidirectional
     return false;
 }
 
 long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate,
-                                       vector<vector<int>>& roadData) {
+                                       vector<vector<int> > &roadData) {
     // TODO: Implement Minimum Spanning Tree (Kruskal's or Prim's)
     // roadData[i] = {u, v, goldCost, silverCost}
     // Total cost = goldCost * goldRate + silverCost * silverRate
@@ -139,7 +289,7 @@ long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long lo
     return -1;
 }
 
-string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int>>& roads) {
+string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int> > &roads) {
     // TODO: Implement All-Pairs Shortest Path (Floyd-Warshall)
     // Sum all shortest distances between unique pairs (i < j)
     // Return the sum as a binary string
@@ -151,7 +301,7 @@ string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int>>& roads) 
 // PART D: SERVER KERNEL (Greedy)
 // =========================================================
 
-int ServerKernel::minIntervals(vector<char>& tasks, int n) {
+int ServerKernel::minIntervals(vector<char> &tasks, int n) {
     // TODO: Implement task scheduler with cooling time
     // Same task must wait 'n' intervals before running again
     // Return minimum total intervals needed (including idle time)
@@ -164,15 +314,15 @@ int ServerKernel::minIntervals(vector<char>& tasks, int n) {
 // =========================================================
 
 extern "C" {
-    PlayerTable* createPlayerTable() {
-        return new ConcretePlayerTable();
-    }
+PlayerTable *createPlayerTable() {
+    return new ConcretePlayerTable();
+}
 
-    Leaderboard* createLeaderboard() {
-        return new ConcreteLeaderboard();
-    }
+Leaderboard *createLeaderboard() {
+    return new ConcreteLeaderboard();
+}
 
-    AuctionTree* createAuctionTree() {
-        return new ConcreteAuctionTree();
-    }
+AuctionTree *createAuctionTree() {
+    return new ConcreteAuctionTree();
+}
 }
