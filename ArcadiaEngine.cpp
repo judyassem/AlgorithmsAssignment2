@@ -167,7 +167,13 @@ private:
             while (current != nullptr) {
                 tc = current;
                 if (current->price == itemPrice) {
-                    // TODO handle duplicate price
+                    if (current->id < itemID) {
+                        current = current->right;
+                    } else if (current->id > itemID) {
+                        current = current->left;
+                    } else {
+                        cout << "can't insert an element with the same price and ID " << endl;
+                    }
                 }
                 if (current->price < itemPrice) {
                     current = current->right;
@@ -186,6 +192,68 @@ private:
         return newNode;
     }
 
+    RBTNode* searchById(RBTNode* root, int id) {
+        if (root == nullptr)
+            return nullptr;
+
+        if (root->id == id)
+            return root;
+
+        RBTNode* leftResult = searchById(root->left, id);
+        if (leftResult != nullptr)
+            return leftResult;
+
+        return searchById(root->right, id);
+    }
+
+    RBTNode* bstDelete(RBTNode*& root, int id) {
+        RBTNode* node = searchById(root, id);
+        if (node == nullptr)
+            return nullptr;
+
+        RBTNode* parent = node->parent;
+        RBTNode* temp = nullptr;
+
+        // Case 1 & 2: node has at most one child
+        if (node->left == nullptr || node->right == nullptr) {
+            temp = (node->right == nullptr) ? node->left : node->right;
+
+            if (parent == nullptr) {
+                root = temp; // node is root
+            } else if (parent->left == node) { // node is the left child
+                parent->left = temp;
+            } else {
+                parent->right = temp;
+            }
+
+            if (temp != nullptr)
+                temp->parent = parent;
+
+            return node;
+        }
+
+        // Case 3: two children use predecessor
+        RBTNode* pred = node->left;
+        while (pred->right != nullptr)
+            pred = pred->right;
+
+        node->id = pred->id;
+        node->price = pred->price;
+
+        // delete predecessor
+        RBTNode* predParent = pred->parent;
+        RBTNode* predChild = pred->left;
+
+        if (predParent->left == pred) // pred awl node 3la el shemal
+            predParent->left = predChild;
+        else
+            predParent->right = predChild;
+
+        if (predChild != nullptr)
+            predChild->parent = predParent;
+
+        return pred;
+    }
 public:
     ConcreteAuctionTree() {
         root = nullptr;
@@ -206,7 +274,7 @@ public:
                     newNode = newNode->parent->parent;
                 } else {
                     if (newNode == newNode->parent->right) { // case 2 (near child)
-                        newNode = newNode->parent; ///+++++++++++might be wrong+++++++++++++++++++++++++++++++++++++++++++++++
+                        newNode = newNode->parent; ///+++++++++++might be wrong++++++++++++++++++
                         rotateToLeft(newNode);
                     } else { // case 3 (far child)
                         newNode->parent->is_black = true;
@@ -239,8 +307,71 @@ public:
     }
 
     void deleteItem(int itemID) override {
-        // TODO: Implement Red-Black Tree deletion
         // This is complex - handle all cases carefully
+        RBTNode *blackToken = bstDelete(root, itemID);
+        while (blackToken != root && blackToken->is_black == true) {
+            if(blackToken == blackToken->parent->left) { // left child
+                RBTNode *brother = blackToken->parent->right;
+
+                if (brother->is_black == false) { // case 1
+                    blackToken->parent->is_black = false;
+                    brother->is_black = true;
+                    rotateToLeft(blackToken->parent);
+                    brother = blackToken->parent->right;
+                }
+
+                if (brother->left->is_black && brother->right->is_black) { // case 2
+                    brother->is_black = false;
+                    blackToken = blackToken->parent;
+                }
+
+                else {
+                    if (brother->right->is_black) { // case 3
+                        brother->left->is_black = true;
+                        brother->is_black = false;
+                        rotateToRight(brother);
+                        brother = blackToken->parent->right;
+                    } else {// case 4
+                        brother->right->is_black = true;
+                        brother->is_black = blackToken->parent->is_black;
+                        blackToken->parent->is_black = true;
+                        rotateToLeft(blackToken->parent);
+                        // blackToken = root; //+++++++++++++++++++++++++++++
+                    }
+                }
+            }
+            else {
+                RBTNode *brother = blackToken->parent->left;
+
+                if (brother->is_black == false) { // case 1
+                    blackToken->parent->is_black = false;
+                    brother->is_black = true;
+                    rotateToRight(blackToken->parent);
+                    brother = blackToken->parent->left;
+                }
+
+                if (brother->right->is_black && brother->left->is_black) { // case 2
+                    brother->is_black = false;
+                    blackToken = blackToken->parent;
+                }
+
+                else {
+                    if (brother->left->is_black) { // case 3
+                        brother->right->is_black = true;
+                        brother->is_black = false;
+                        rotateToLeft(brother);
+                        brother = blackToken->parent->left;
+                    } else {// case 4
+                        brother->left->is_black = true;
+                        brother->is_black = blackToken->parent->is_black;
+                        blackToken->parent->is_black = true;
+                        rotateToRight(blackToken->parent);
+                        // blackToken = root; //+++++++++++++++++++++++++++++
+                    }
+                }
+
+            }
+        }
     }
 };
 
