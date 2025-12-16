@@ -24,22 +24,59 @@ using namespace std;
 
 class ConcretePlayerTable : public PlayerTable {
 private:
-    // TODO: Define your data structures here
-    // Hint: You'll need a hash table with double hashing collision resolution
 
-public:
-    ConcretePlayerTable() {
-        // TODO: Initialize your hash table
+    static const int TableSize = 101;
+    static constexpr double A = 0.6180339887;
+    struct Entry {
+        int playerID;
+        string name;
+        bool occupied;
+
+        Entry() : playerID(-1), name(""), occupied(false) {}
+    };
+    vector<Entry> table;
+
+    int hash1(int key) {
+        double frac = fmod((abs(key) * A),1.0);
+        return floor(TableSize * frac);
+    }
+    int hash2(int key) {
+        return 97 - (abs(key) % 97);
     }
 
+public:
+    ConcretePlayerTable() : table(TableSize) {}
+
     void insert(int playerID, string name) override {
-        // TODO: Implement double hashing insert
-        // Remember to handle collisions using h1(key) + i * h2(key)
+       int h1 = hash1(playerID);
+        int h2 = hash2(playerID);
+
+        for (int i = 0; i < TableSize; i++) {
+            int idx = (h1 + i * h2) % TableSize;
+            if (!table[idx].occupied) {
+                table[idx].playerID = playerID;
+                table[idx].name = name;
+                table[idx].occupied = true;
+                return;
+            }
+        }
+        cout << "Table is Full";
     }
 
     string search(int playerID) override {
-        // TODO: Implement double hashing search
-        // Return "" if player not found
+        int h1 = hash1(playerID);
+        int h2 = hash2(playerID);
+
+        for (int i = 0; i < TableSize; i++) {
+            int idx = (h1 + i * h2) % TableSize;
+
+            if (!table[idx].occupied)
+                return "";
+
+            if (table[idx].playerID == playerID)
+                return table[idx].name;
+        }
+
         return "";
     }
 };
