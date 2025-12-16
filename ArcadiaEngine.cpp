@@ -37,8 +37,7 @@ private:
     vector<Entry> table;
 
     int hash1(int key) {
-        double frac = fmod((abs(key) * A),1.0);
-        return floor(TableSize * frac);
+        return key % TableSize;
     }
     int hash2(int key) {
         return 97 - (abs(key) % 97);
