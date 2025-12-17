@@ -168,15 +168,19 @@ public:
     }
 
     vector<int> getTopN(int n) override {
-        vector<int> result;
+        vector<int> result(n, -1);
         Node* current = head->forward[0];
-        while(current && n--) {
-            result.push_back(current->playerID);
+
+        int index = 0;
+        while (current && index < n) {
+            result[index++] = current->playerID;
             current = current->forward[0];
         }
+
         return result;
     }
 };
+
 
 // --- 3. AuctionTree (Red-Black Tree) ---
 
@@ -520,25 +524,58 @@ public:
 // =========================================================
 
 int InventorySystem::optimizeLootSplit(int n, vector<int> &coins) {
-    // TODO: Implement partition problem using DP
-    // Goal: Minimize |sum(subset1) - sum(subset2)|
-    // Hint: Use subset sum DP to find closest sum to total/2
-    return 0;
+        int total = 0;
+		for (int i = 0; i < n; i++) {
+			total += coins[i];
+		}
+		int half = total / 2;
+		vector <bool> possible(half + 1, false);
+		possible[0] = true;
+		for (int item : coins) {
+			for (int j = half; j >= item; j--) {
+				possible[j] = possible[j] || possible[j - item];
+			}
+		}
+		for (int j = half; j >= 0; j--) {
+			if (possible[j]) {
+				return total - (2 * j);
+			}
+		}
+		return total;
 }
 
 int InventorySystem::maximizeCarryValue(int capacity, vector<pair<int, int> > &items) {
-    // TODO: Implement 0/1 Knapsack using DP
-    // items = {weight, value} pairs
-    // Return maximum value achievable within capacity
-    return 0;
-}
+    	int n = items.size();
+		vector<int> packback(capacity + 1, 0);
+
+		for (int i = 0; i < n; i++) {
+			int weight = items[i].first;
+			int value = items[i].second;
+
+			for (int w = capacity; w >= weight; w--) {
+				packback[w] = max(packback[w], packback[w - weight] + value);
+			}
+		}
+
+		return packback[capacity];
+	}
+
 
 long long InventorySystem::countStringPossibilities(string s) {
-    // TODO: Implement string decoding DP
-    // Rules: "uu" can be decoded as "w" or "uu"
-    //        "nn" can be decoded as "m" or "nn"
-    // Count total possible decodings
-    return 0;
+        static const int mod = 1e9 + 7;
+        int n = s.size();
+		vector <long long> str(n + 1, 0);
+		str[0] = 1;
+		for (int i = 1; i <= n; i++) {
+			str[i] = str[i - 1] % mod;
+			if (i >= 2 && s.substr(i - 2, 2) == "uu") {
+				str[i] = (str[i] + str[i - 2]) % mod;
+			}
+			if (i >= 2 && s.substr(i - 2, 2) == "nn") {
+				str[i] = (str[i] + str[i - 2]) % mod;
+			}
+		}
+		return str[n];
 }
 
 // =========================================================
@@ -573,12 +610,63 @@ string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int> > &roads)
 // =========================================================
 
 int ServerKernel::minIntervals(vector<char> &tasks, int n) {
-    // TODO: Implement task scheduler with cooling time
-    // Same task must wait 'n' intervals before running again
-    // Return minimum total intervals needed (including idle time)
-    // Hint: Use greedy approach with frequency counting
-    return 0;
+     if (tasks.empty() || tasks.size() > 10000) {
+        return 0;  
+    }
+
+    if (n < 0) n = 0;
+    if (n > 100) n = 100;
+
+    for (char t : tasks) {
+        if (t < 'A' || t > 'Z') {
+            return 0;  
+        }
+    }
+    map<char, int> freq;
+    for (auto task : tasks) {
+        freq[task]++;
+    }
+
+    vector<pair<char, int>> freq_list(freq.begin(), freq.end());
+
+    //greedy approach to place the most frequent tasks first
+    sort(freq_list.begin(), freq_list.end(),
+         [](auto &a, auto &b) {
+             return a.second > b.second;
+         });
+
+    int max_freq = freq_list[0].second; // Highest frequency
+    // decode the empty slots to be filled between the most frequent tasks
+
+    int interval_needed = (max_freq - 1) * (n + 1) + 1;
+    int empty_slots = (max_freq - 1) * n;
+
+    for (int i = 1; i < freq_list.size(); i++) { //start from the second index because the first is already considered
+
+        int current_freq = freq_list[i].second; // Current task frequency
+
+        if (empty_slots == 0) {
+            interval_needed += current_freq;
+            continue;
+        }
+
+        if (current_freq == max_freq) { // If current task has the same max frequency
+            interval_needed += 1;
+            empty_slots -= (max_freq - 1);
+        }
+        else {
+            if (current_freq > empty_slots) {
+                interval_needed += current_freq - empty_slots;
+                empty_slots = 0;
+            } else {
+                empty_slots -= current_freq;
+            }
+        }
+    }
+
+    return interval_needed;
 }
+
 
 // =========================================================
 // FACTORY FUNCTIONS (Required for Testing)
