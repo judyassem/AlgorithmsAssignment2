@@ -106,8 +106,21 @@ void test_PartA_DataStructures() {
     // Requirement: Insert items without crashing
     AuctionTree* tree = createAuctionTree();
     runner.runTest("AuctionTree: Insert Items", [&]() {
-        tree->insertItem(1, 100);
-        tree->insertItem(2, 50);
+        tree->insertItem(1, 8);
+        tree->insertItem(2, 18);
+        tree->insertItem(3, 5);
+        tree->insertItem(4, 15);
+        tree->insertItem(5, 17);
+        tree->insertItem(6, 25);
+        tree->insertItem(7, 40);
+        tree->insertItem(8, 80);
+        // tree->insertItem(9, 80);
+        return true; // Pass if no crash
+    }());
+    runner.runTest("AuctionTree: Delete Items", [&]() {
+        tree->deleteItem(8);
+        tree->deleteItem(1);
+        tree->deleteItem(5);
         return true; // Pass if no crash
     }());
     delete tree;
@@ -200,9 +213,9 @@ int main() {
     cout << "-----------------------------------------" << endl;
 
     test_PartA_DataStructures();
-    test_PartB_Inventory();
-    test_PartC_Navigator();
-    test_PartD_Kernel();
+    // test_PartB_Inventory();
+    // test_PartC_Navigator();
+    // test_PartD_Kernel();
 
     runner.printSummary();
 

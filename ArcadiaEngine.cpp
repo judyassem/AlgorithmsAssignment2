@@ -184,19 +184,19 @@ class ConcreteAuctionTree : public AuctionTree {
 private:
     // Hint: Each node needs: id, price, color, left, right, parent pointers
     struct RBTNode {
-        int id;
-        int price;
-        bool is_black;
-        RBTNode *left;
-        RBTNode *right;
-        RBTNode *parent;
+        int id = 0;
+        int price = 0;
+        bool is_black = false;
+        RBTNode *left = nullptr;
+        RBTNode *right = nullptr;
+        RBTNode *parent = nullptr;
     };
 
     RBTNode *root;
 
     void rotateToLeft(RBTNode *&root) {
         if (root == nullptr)
-            cout << "Error in the tree" << endl;
+            cout << "Error in the tree rotation: root is null" << endl;
         else if (root->right == nullptr)
             cout << "Error in the tree: No right subtree to rotate." << endl;
 
@@ -224,7 +224,7 @@ private:
 
     void rotateToRight(RBTNode *&root) {
         if (root == nullptr)
-            cout << "Error in the tree" << endl;
+            cout << "Error in the tree rotation: root is null" << endl;
         else if (root->left == nullptr)
             cout << "Error in the tree: No left subtree to rotate." << endl;
 
@@ -282,7 +282,7 @@ private:
                         cout << "can't insert an element with the same price and ID " << endl;
                     }
                 }
-                if (current->price < itemPrice) {
+                else if (current->price < itemPrice) {
                     current = current->right;
                 } else {
                     current = current->left;
@@ -291,17 +291,28 @@ private:
             if (tc->price < itemPrice) {
                 tc->right = newNode;
                 newNode->parent = tc;
-            } else {
+            } else if (tc->price > itemPrice) {
                 tc->left = newNode;
                 newNode->parent = tc;
+            }else {
+                if (tc->id < itemID) {
+                    tc->right = newNode;
+                    newNode->parent = tc;
+                }else if (tc->id > itemID) {
+                    tc->left = newNode;
+                    newNode->parent = tc;
+                }else {
+                    cout << "cannot insert item with the same price and id" << endl;
+                }
             }
         }
         return newNode;
     }
 
     RBTNode* searchById(RBTNode* root, int id) {
-        if (root == nullptr)
+        if (root == nullptr) {
             return nullptr;
+        }
 
         if (root->id == id)
             return root;
@@ -315,51 +326,55 @@ private:
 
     RBTNode* bstDelete(RBTNode*& root, int id) {
         RBTNode* node = searchById(root, id);
-        if (node == nullptr)
+        if (node == nullptr) {
+            cout << "Error in the tree deletion: node to delete is null" << endl;
             return nullptr;
+        }
 
-        RBTNode* parent = node->parent;
+        RBTNode* removedNode = node;
         RBTNode* temp = nullptr;
 
         // Case 1 & 2: node has at most one child
         if (node->left == nullptr || node->right == nullptr) {
             temp = (node->right == nullptr) ? node->left : node->right;
 
-            if (parent == nullptr) {
+            if (node->parent == nullptr) {
                 root = temp; // node is root
-            } else if (parent->left == node) { // node is the left child
-                parent->left = temp;
+                if (temp != nullptr) temp->parent = nullptr;
+
+            } else if (node->parent->left == node) { // node is the left child
+                 temp = node->parent->left;
             } else {
-                parent->right = temp;
+                 temp = node->parent->right;
             }
 
             if (temp != nullptr)
-                temp->parent = parent;
+                temp->parent = node->parent;
 
-            return node;
+            return temp;
         }
 
         // Case 3: two children use predecessor
-        RBTNode* pred = node->left;
-        while (pred->right != nullptr)
-            pred = pred->right;
+        removedNode = node->left;
+        while (removedNode->right != nullptr)
+            removedNode = removedNode->right;
 
-        node->id = pred->id;
-        node->price = pred->price;
+        // deletedBlack = removedNode->is_black;
+        node->id = removedNode->id;
+        node->price = removedNode->price;
 
-        // delete predecessor
-        RBTNode* predParent = pred->parent;
-        RBTNode* predChild = pred->left;
+        return removedNode;
 
-        if (predParent->left == pred) // pred awl node 3la el shemal
-            predParent->left = predChild;
+        temp = removedNode->left;
+
+        if (removedNode->parent->left == removedNode) // pred awl node 3la el shemal
+            removedNode->parent->left = temp;
         else
-            predParent->right = predChild;
+            removedNode->parent->right = temp;
 
-        if (predChild != nullptr)
-            predChild->parent = predParent;
+        if (temp != nullptr)
+            temp->parent = removedNode->parent;
 
-        return pred;
     }
 public:
     ConcreteAuctionTree() {
@@ -370,28 +385,32 @@ public:
         // Remember to maintain RB-Tree properties with rotations and recoloring
         RBTNode *newNode = insert(itemID, price);
         newNode->is_black = false; // first insert red node
-        while (newNode != root && newNode->parent->is_black == false) { // parent is red so there is violation
+        while (newNode != root && newNode->parent->is_black == false && newNode->is_black == false) { // parent is red so there is violation
 
             if (newNode->parent == newNode->parent->parent->left) { // node is left of a left parent so uncle is right
                 RBTNode *uncle = newNode->parent->parent->right;
-                if (uncle->is_black == false) { // case 1
+                if (uncle != nullptr && uncle->is_black == false) { // case 1
                     newNode->parent->is_black = true;
                     uncle->is_black = true;
                     newNode->parent->parent->is_black = false;
                     newNode = newNode->parent->parent;
                 } else {
                     if (newNode == newNode->parent->right) { // case 2 (near child)
-                        newNode = newNode->parent; ///+++++++++++might be wrong++++++++++++++++++
+                        newNode = newNode->parent;
                         rotateToLeft(newNode);
+                        newNode = newNode->left;
+
                     } else { // case 3 (far child)
                         newNode->parent->is_black = true;
                         newNode->parent->parent->is_black = false;
-                        rotateToRight(newNode->parent->parent);
+                        newNode = newNode->parent->parent;
+                        rotateToRight(newNode);
+                        newNode = newNode->right;
                     }
                 }
             } else {
                 RBTNode *uncle = newNode->parent->parent->left;
-                if (uncle->is_black == false) {
+                if (uncle != nullptr && uncle->is_black == false) {
                     newNode->parent->is_black = true;
                     uncle->is_black = true;
                     newNode->parent->parent->is_black = false;
@@ -400,23 +419,32 @@ public:
                     if (newNode == newNode->parent->left) {
                         newNode = newNode->parent;
                         rotateToRight(newNode);
+                        newNode = newNode->right;
                     } else {
                         newNode->parent->is_black = true;
                         newNode->parent->parent->is_black = false;
-                        rotateToLeft(newNode->parent->parent);
+                        newNode = newNode->parent->parent;
+                        rotateToLeft(newNode);
+                        newNode = newNode->left;
                     }
                 }
             }
         }
         if (root == newNode) {
+            if (newNode->parent != nullptr) {
+                root = newNode->parent;
+            }
             root->is_black = true;
+            // delete newNode;
         }
     }
 
     void deleteItem(int itemID) override {
         // This is complex - handle all cases carefully
         RBTNode *blackToken = bstDelete(root, itemID);
-        while (blackToken != root && blackToken->is_black == true) {
+
+        while (blackToken != root && (blackToken == nullptr || blackToken->is_black == true)) {
+
             if(blackToken == blackToken->parent->left) { // left child
                 RBTNode *brother = blackToken->parent->right;
 
@@ -427,28 +455,31 @@ public:
                     brother = blackToken->parent->right;
                 }
 
-                if (brother->left->is_black && brother->right->is_black) { // case 2
+                else if ((brother->left == nullptr || brother->left->is_black)
+                    && (brother->right == nullptr || brother->right->is_black)) { // case 2
                     brother->is_black = false;
                     blackToken = blackToken->parent;
                 }
 
                 else {
-                    if (brother->right->is_black) { // case 3
-                        brother->left->is_black = true;
+                    if (brother->right->is_black || brother->right == nullptr) { // case 3
+                        if (brother->left != nullptr) brother->left->is_black = true;
                         brother->is_black = false;
                         rotateToRight(brother);
                         brother = blackToken->parent->right;
                     } else {// case 4
-                        brother->right->is_black = true;
+                        if (brother->right != nullptr) brother->right->is_black = true;
                         brother->is_black = blackToken->parent->is_black;
                         blackToken->parent->is_black = true;
                         rotateToLeft(blackToken->parent);
-                        // blackToken = root; //+++++++++++++++++++++++++++++
+                        blackToken = root; //+++++++++++++++++++++++++++++
                     }
                 }
             }
             else {
                 RBTNode *brother = blackToken->parent->left;
+
+                // if (!brother) break;
 
                 if (brother->is_black == false) { // case 1
                     blackToken->parent->is_black = false;
@@ -457,28 +488,30 @@ public:
                     brother = blackToken->parent->left;
                 }
 
-                if (brother->right->is_black && brother->left->is_black) { // case 2
+                if ((brother->right->is_black || brother->right == nullptr) &&
+                    (brother->left->is_black || brother->left == nullptr)) { // case 2
                     brother->is_black = false;
                     blackToken = blackToken->parent;
                 }
 
                 else {
-                    if (brother->left->is_black) { // case 3
-                        brother->right->is_black = true;
+                    if (brother->left->is_black || brother->left == nullptr) { // case 3
+                        if (brother->right != nullptr) brother->right->is_black = true;
                         brother->is_black = false;
                         rotateToLeft(brother);
                         brother = blackToken->parent->left;
                     } else {// case 4
-                        brother->left->is_black = true;
+                        if (brother->left != nullptr) brother->left->is_black = true;
                         brother->is_black = blackToken->parent->is_black;
                         blackToken->parent->is_black = true;
                         rotateToRight(blackToken->parent);
-                        // blackToken = root; //+++++++++++++++++++++++++++++
+                        blackToken = root; //+++++++++++++++++++++++++++++
                     }
                 }
-
             }
         }
+        if (blackToken) blackToken->is_black = true;
+        if (root) root->is_black = true;
     }
 };
 
