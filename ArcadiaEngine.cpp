@@ -168,15 +168,19 @@ public:
     }
 
     vector<int> getTopN(int n) override {
-        vector<int> result;
+        vector<int> result(n, -1);
         Node* current = head->forward[0];
-        while(current && n--) {
-            result.push_back(current->playerID);
+
+        int index = 0;
+        while (current && index < n) {
+            result[index++] = current->playerID;
             current = current->forward[0];
         }
+
         return result;
     }
 };
+
 
 // --- 3. AuctionTree (Red-Black Tree) ---
 
