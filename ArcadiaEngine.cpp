@@ -24,22 +24,58 @@ using namespace std;
 
 class ConcretePlayerTable : public PlayerTable {
 private:
-    // TODO: Define your data structures here
-    // Hint: You'll need a hash table with double hashing collision resolution
 
-public:
-    ConcretePlayerTable() {
-        // TODO: Initialize your hash table
+    static const int TableSize = 101;
+    static constexpr double A = 0.6180339887;
+    struct Entry {
+        int playerID;
+        string name;
+        bool occupied;
+
+        Entry() : playerID(-1), name(""), occupied(false) {}
+    };
+    vector<Entry> table;
+
+    int hash1(int key) {
+        return key % TableSize;
+    }
+    int hash2(int key) {
+        return 97 - (abs(key) % 97);
     }
 
+public:
+    ConcretePlayerTable() : table(TableSize) {}
+
     void insert(int playerID, string name) override {
-        // TODO: Implement double hashing insert
-        // Remember to handle collisions using h1(key) + i * h2(key)
+       int h1 = hash1(playerID);
+        int h2 = hash2(playerID);
+
+        for (int i = 0; i < TableSize; i++) {
+            int idx = (h1 + i * h2) % TableSize;
+            if (!table[idx].occupied) {
+                table[idx].playerID = playerID;
+                table[idx].name = name;
+                table[idx].occupied = true;
+                return;
+            }
+        }
+        cout << "Table is Full";
     }
 
     string search(int playerID) override {
-        // TODO: Implement double hashing search
-        // Return "" if player not found
+        int h1 = hash1(playerID);
+        int h2 = hash2(playerID);
+
+        for (int i = 0; i < TableSize; i++) {
+            int idx = (h1 + i * h2) % TableSize;
+
+            if (!table[idx].occupied)
+                return "";
+
+            if (table[idx].playerID == playerID)
+                return table[idx].name;
+        }
+
         return "";
     }
 };
@@ -48,26 +84,97 @@ public:
 
 class ConcreteLeaderboard : public Leaderboard {
 private:
-    // TODO: Define your skip list node structure and necessary variables
-    // Hint: You'll need nodes with multiple forward pointers
+    struct Node {
+        int playerID;
+        int score;
+        vector<Node*> forward;
+        Node(int lvl, int id, int s) : playerID(id), score(s), forward(lvl, nullptr) {}
+    };
+    Node* head;
+    int maxLevel;
+    int currentLevel;
+    const float P = 0.5;
+
+    int randomLevel() {
+        int lvl = 1;
+        while(((double)rand() / RAND_MAX) < P && lvl < maxLevel)
+            lvl++;
+        return lvl;
+    }
+
+    bool comesBefore(int score1, int id1, int score2, int id2) {
+       if(score1 != score2) return score1 > score2;
+        return id1 < id2;
+    }
 
 public:
-    ConcreteLeaderboard() {
-        // TODO: Initialize your skip list
+    ConcreteLeaderboard() : maxLevel(16), currentLevel(1) {
+        head = new Node(maxLevel, -1, INT_MAX);
     }
 
     void addScore(int playerID, int score) override {
-        // TODO: Implement skip list insertion
-        // Remember to maintain descending order by score
+        vector<Node*> update(maxLevel, nullptr);
+        Node* current = head;
+
+        for (int i = currentLevel - 1; i >= 0; i--) {
+            while (current->forward[i] && comesBefore(current->forward[i]->score,
+                               current->forward[i]->playerID, score, playerID)) {
+                current = current->forward[i]; }
+            update[i] = current;
+        }
+
+        int newLevel = randomLevel();
+        if(newLevel > currentLevel) {
+            for (int i = currentLevel; i < newLevel; i++) update[i] = head;
+            currentLevel = newLevel;
+        }
+
+        Node* newNode = new Node(newLevel, playerID, score);
+
+        for(int i = 0; i < newLevel; i++) {
+            newNode->forward[i] = update[i]->forward[i];
+            update[i]->forward[i] = newNode;
+        }
+
     }
 
     void removePlayer(int playerID) override {
-        // TODO: Implement skip list deletion
+        Node* current = head -> forward[0];
+        Node* target = nullptr;
+        while(current && current->playerID != playerID) {
+            current = current->forward[0];
+        }
+        if(!current) return;
+        target = current;
+        vector<Node*> update(maxLevel, nullptr);
+        current = head;
+        for (int i = currentLevel - 1; i >= 0; i--) {
+            while (current->forward[i] && comesBefore(current->forward[i]->score,current->forward[i]->playerID
+                , target-> score, target-> playerID)) {
+                current = current->forward[i]; }
+            update[i] = current;
+        }
+
+        int nodeLevel = target -> forward.size();
+        for(int i = 0; i < nodeLevel; i++) {
+            if(update[i]->forward[i] == target)
+               update[i]->forward[i] = target ->forward[i];
+        }
+        delete target;
+        while (currentLevel > 1 && head->forward[currentLevel - 1] == nullptr) {
+            currentLevel--;
+        }
+
     }
 
     vector<int> getTopN(int n) override {
-        // TODO: Return top N player IDs in descending score order
-        return {};
+        vector<int> result;
+        Node* current = head->forward[0];
+        while(current && n--) {
+            result.push_back(current->playerID);
+            current = current->forward[0];
+        }
+        return result;
     }
 };
 
