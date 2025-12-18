@@ -106,6 +106,10 @@ private:
        if(score1 != score2) return score1 > score2;
         return id1 < id2;
     }
+	int sanitizeScore(int score) {
+        return (score < 0) ? 0 : score;
+		cout<< "negative score will be 0";
+    }
 
 public:
     ConcreteLeaderboard() : maxLevel(16), currentLevel(1) {
@@ -113,6 +117,7 @@ public:
     }
 
     void addScore(int playerID, int score) override {
+		score = sanitizeScore(score);
         vector<Node*> update(maxLevel, nullptr);
         Node* current = head;
 
