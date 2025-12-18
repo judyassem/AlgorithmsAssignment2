@@ -368,17 +368,6 @@ private:
         node->price = removedNode->price;
 
         return removedNode;
-
-        temp = removedNode->left;
-
-        if (removedNode->parent->left == removedNode) // pred awl node 3la el shemal
-            removedNode->parent->left = temp;
-        else
-            removedNode->parent->right = temp;
-
-        if (temp != nullptr)
-            temp->parent = removedNode->parent;
-
     }
 public:
     ConcreteAuctionTree() {
@@ -446,6 +435,7 @@ public:
     void deleteItem(int itemID) override {
         // This is complex - handle all cases carefully
         RBTNode *blackToken = bstDelete(root, itemID);
+        RBTNode *temp = blackToken;
 
         while (blackToken != root && (blackToken == nullptr || blackToken->is_black == true)) {
 
@@ -476,14 +466,12 @@ public:
                         brother->is_black = blackToken->parent->is_black;
                         blackToken->parent->is_black = true;
                         rotateToLeft(blackToken->parent);
-                        blackToken = root; //+++++++++++++++++++++++++++++
+                        blackToken = root;
                     }
                 }
             }
             else {
                 RBTNode *brother = blackToken->parent->left;
-
-                // if (!brother) break;
 
                 if (brother->is_black == false) { // case 1
                     blackToken->parent->is_black = false;
@@ -509,12 +497,18 @@ public:
                         brother->is_black = blackToken->parent->is_black;
                         blackToken->parent->is_black = true;
                         rotateToRight(blackToken->parent);
-                        blackToken = root; //+++++++++++++++++++++++++++++
+                        blackToken = root;
                     }
                 }
             }
         }
         if (blackToken) blackToken->is_black = true;
+        if (temp != nullptr && temp->parent != nullptr) {
+            if (temp->parent->left == temp)
+                temp->parent->left = nullptr;
+            else if (temp->parent->right == temp)
+                temp->parent->right = nullptr;
+        }
         if (root) root->is_black = true;
     }
 };
