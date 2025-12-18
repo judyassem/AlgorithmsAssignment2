@@ -805,7 +805,7 @@ int ServerKernel::minIntervals(vector<char> &tasks, int n) {
 
     return interval_needed;
 }
-
+}
 
 // =========================================================
 // FACTORY FUNCTIONS (Required for Testing)
