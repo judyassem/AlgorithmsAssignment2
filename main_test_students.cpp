@@ -202,9 +202,28 @@ void test_PartD_Kernel() {
     // 1. Task Scheduler
     // PDF Example: Tasks={A, A, B}, n=2.
     // Order: A -> B -> idle -> A. Total intervals: 4.
-    runner.runTest("Scheduler: {A, A, B}, n=2 -> 4 Intervals", [&]() {
+    runner.runTest("Scheduler: {A, A, B}, n=2 -> 4 Intervals"
+    "Scheduler: {'A', 'A', 'a','B','B'}, n=2 -> 7 Intervals"
+    "Scheduler: {'A', 'A', 'B', 'B'}, n=0 -> 4 Intervals"
+    "Scheduler: {'A', 'A', 'a','b'}, n=2 -> 7 Intervals", [&]() {
         vector<char> tasks = {'A', 'A', 'B'};
         return ServerKernel::minIntervals(tasks, 2) == 4;
+        vector<char> tasks1 = {'A', 'A', 'a','B','B'};
+        return ServerKernel::minIntervals(tasks, 2) == 7;
+        vector<char> tasks2 = {'A', 'A', 'B', 'B'};
+        return ServerKernel::minIntervals(tasks, 2) == 5;
+        vector<char> tasks3 = {'A', 'A', 'a','b'};
+        return ServerKernel::minIntervals(tasks, 2) == 7;
+        vector<char> tasks4 = {'A'};
+        return ServerKernel::minIntervals(tasks, 5) == 1;
+        vector<char> tasks5 = {'A', 'b', 'c','d'};
+        return ServerKernel::minIntervals(tasks, 100) == 4;
+        vector<char> tasks6 = {'A', 'A', 'a','a'};
+        return ServerKernel::minIntervals(tasks, 0) == 4;
+        vector<char> tasks7 = {'A', 'A', 'A'};
+        return ServerKernel::minIntervals(tasks, 3) == 9;
+        
+        
     }());
 }
 
