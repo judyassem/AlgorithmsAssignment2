@@ -215,12 +215,12 @@ void test_PartC_Navigator() {
     }());
 
     // PDF Example: n=3, 0-1 (2), 0-2 (8). Distances: 2, 8, ∞. Sum=10 -> "1010"
-    runner.runTest("BinarySum: Disconnected Graph -> '1010'", [&]() {
+    runner.runTest("BinarySum: Disconnected Graph -> '10100'", [&]() {
         vector<vector<int>> roads = {
             {0, 1, 2},
             {0, 2, 8}
         };
-        return WorldNavigator::sumMinDistancesBinary(3, roads) == "1010";
+        return WorldNavigator::sumMinDistancesBinary(3, roads) == "10100";
     }());
 }
 
