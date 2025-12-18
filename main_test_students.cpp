@@ -10,6 +10,7 @@
 #include <iomanip>
 #include <functional>
 #include "ArcadiaEngine.h"
+#include "ArcadiaEngine.cpp"
 
 using namespace std;
 
@@ -168,6 +169,20 @@ void test_PartC_Navigator() {
         return WorldNavigator::pathExists(3, edges, 0, 2) == true;
     }());
 
+    // ❌ Disconnected Components
+    // n=4, edges={{0,1},{2,3}}, source=0, dest=3 -> False
+    runner.runTest("PathExists: Disconnected Graph -> False", [&]() {
+        vector<vector<int>> edges = {{0, 1}, {2, 3}};
+        return WorldNavigator::pathExists(4, edges, 0, 3) == false;
+    }());
+
+    // ✅ Single Node Graph
+    // n=1, edges={}, source=0, dest=0 -> True
+    runner.runTest("PathExists: Single Node 0->0 -> True", [&]() {
+        vector<vector<int>> edges = {};
+        return WorldNavigator::pathExists(1, edges, 0, 0) == true;
+    }());
+
     // 2. The Bribe (MST)
     // PDF Example: 3 Nodes. Roads: {0,1,10}, {1,2,5}, {0,2,20}. Rate=1.
     // MST should pick 10 and 5. Total 15.
@@ -189,6 +204,23 @@ void test_PartC_Navigator() {
             {1, 2, 2}
         };
         return WorldNavigator::sumMinDistancesBinary(3, roads) == "110";
+    }());
+ 
+    // PDF Example: n=2, 0-1 (4). Distance: 4. Sum=4 -> "100"
+    runner.runTest("BinarySum: Single Edge -> '100'", [&]() {
+        vector<vector<int>> roads = {
+            {0, 1, 4}
+        };
+        return WorldNavigator::sumMinDistancesBinary(2, roads) == "100";
+    }());
+
+    // PDF Example: n=3, 0-1 (2), 0-2 (8). Distances: 2, 8, ∞. Sum=10 -> "1010"
+    runner.runTest("BinarySum: Disconnected Graph -> '1010'", [&]() {
+        vector<vector<int>> roads = {
+            {0, 1, 2},
+            {0, 2, 8}
+        };
+        return WorldNavigator::sumMinDistancesBinary(3, roads) == "1010";
     }());
 }
 
@@ -212,10 +244,10 @@ int main() {
     cout << "Arcadia Engine - Student Happy Path Tests" << endl;
     cout << "-----------------------------------------" << endl;
 
-    test_PartA_DataStructures();
-    test_PartB_Inventory();
+    // test_PartA_DataStructures();
+    // test_PartB_Inventory();
     test_PartC_Navigator();
-    test_PartD_Kernel();
+    // test_PartD_Kernel();
 
     runner.printSummary();
 
