@@ -603,7 +603,7 @@ long long InventorySystem::countStringPossibilities(string s) {
 
 bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, int dest) {
 
-    if(source < 0 || source >= n || dest < 0 || dest >= n) return false;
+    if(source < 0 || source >= n || dest < 0 || dest >= n || n <= 0) return false;
     if (source == dest) return true;
 
     vector<vector<int>> adjacencyList(n);
