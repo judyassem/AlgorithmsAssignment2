@@ -615,7 +615,6 @@ long long InventorySystem::countStringPossibilities(string s) {
 // PART C: WORLD NAVIGATOR (Graphs)
 // =========================================================
 
-<<<<<<< HEAD
 bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, int dest) {
 
     if(source < 0 || source >= n || dest < 0 || dest >= n) return false;
@@ -646,19 +645,9 @@ bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, i
             }
         }
     }
-
-=======
-bool WorldNavigator::pathExists(int n, vector<vector<int> > &edges, int source, int dest) {
-    // TODO: Implement path existence check using BFS or DFS
-    // edges are bidirectional
->>>>>>> 96a878d78741cf628fa455e1bb5dc1661b57f98e
     return false;
-
 }
-
-long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate,
-<<<<<<< HEAD
-                                       vector<vector<int>>& roadData) {
+long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate,vector<vector<int>>& roadData) {
 
     struct Edge {
         int u, v;
@@ -749,22 +738,6 @@ string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int>>& roads) 
     }
 
     return binary;
-=======
-                                       vector<vector<int> > &roadData) {
-    // TODO: Implement Minimum Spanning Tree (Kruskal's or Prim's)
-    // roadData[i] = {u, v, goldCost, silverCost}
-    // Total cost = goldCost * goldRate + silverCost * silverRate
-    // Return -1 if graph cannot be fully connected
-    return -1;
-}
-
-string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int> > &roads) {
-    // TODO: Implement All-Pairs Shortest Path (Floyd-Warshall)
-    // Sum all shortest distances between unique pairs (i < j)
-    // Return the sum as a binary string
-    // Hint: Handle large numbers carefully
-    return "0";
->>>>>>> 96a878d78741cf628fa455e1bb5dc1661b57f98e
 }
 
 // =========================================================
