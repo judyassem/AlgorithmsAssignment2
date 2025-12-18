@@ -754,10 +754,12 @@ int ServerKernel::minIntervals(vector<char> &tasks, int n) {
     if (n < 0) n = 0;
     if (n > 100) n = 100;
 
-    for (char t : tasks) {
-        if (t < 'A' || t > 'Z') {
-            return 0;  
-        }
+      for (char &t : tasks) {
+    if (t >= 'a' && t <= 'z') {
+        t = t - 'a' + 'A';   
+    }
+    else if (t < 'A' || t > 'Z') {
+        return 0;           
     }
     map<char, int> freq;
     for (auto task : tasks) {
