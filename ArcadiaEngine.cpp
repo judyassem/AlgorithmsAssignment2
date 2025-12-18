@@ -523,6 +523,25 @@ public:
 // PART B: INVENTORY SYSTEM (Dynamic Programming)
 // =========================================================
 
+static int maximizeCarryValue(int capacity, vector<pair<int, int>> &items) {
+	if (capacity <= 0 || items.empty()) { 
+		return 0;
+	};
+	int n = items.size();
+	vector<int> packback(capacity + 1, 0);
+
+	for (const auto& item : items) {
+		int weight = item.first;
+		int value = item.second;
+
+		for (int w = capacity; w >= weight; w--) {
+			packback[w] = max(packback[w], packback[w - weight] + value);
+		}
+	}
+
+	return packback[capacity];
+}
+
 int InventorySystem::optimizeLootSplit(int n, vector<int> &coins) {
         int total = 0;
 		for (int i = 0; i < n; i++) {
