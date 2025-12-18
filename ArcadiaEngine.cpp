@@ -16,39 +16,6 @@
 
 
 using namespace std;
-class DisSubset{
-    
-private:
-    vector<int> parent;
-public:
-    DisSubset(int n){
-        parent.resize(n,-1);
-    }
-
-    int find(int u){
-        if(parent[u] < 0){
-            return u;
-        }
-        return parent[u] = find(parent[u]);
-    }
-
-    bool Union(int x, int y){
-        int xRoot = find(x);
-        int yRoot = find(y);
-        if(xRoot == yRoot){
-            return false;
-        }
-        if(parent[xRoot] < parent[yRoot]){
-            parent[xRoot] += parent[yRoot];
-            parent[yRoot] = xRoot;
-        }else{
-            parent[yRoot] += parent[xRoot];
-            parent[xRoot] = yRoot;
-        }
-        return true;
-    }
-
-};
 
 // =========================================================
 // PART A: DATA STRUCTURES (Concrete Implementations)
@@ -647,6 +614,41 @@ bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, i
     }
     return false;
 }
+
+class DisSubset{
+    
+private:
+    vector<int> parent;
+public:
+    DisSubset(int n){
+        parent.resize(n,-1);
+    }
+
+    int find(int u){
+        if(parent[u] < 0){
+            return u;
+        }
+        return parent[u] = find(parent[u]);
+    }
+
+    bool Union(int x, int y){
+        int xRoot = find(x);
+        int yRoot = find(y);
+        if(xRoot == yRoot){
+            return false;
+        }
+        if(parent[xRoot] < parent[yRoot]){
+            parent[xRoot] += parent[yRoot];
+            parent[yRoot] = xRoot;
+        }else{
+            parent[yRoot] += parent[xRoot];
+            parent[xRoot] = yRoot;
+        }
+        return true;
+    }
+
+};
+
 long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate,vector<vector<int>>& roadData) {
 
     struct Edge {
