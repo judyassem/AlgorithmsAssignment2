@@ -610,6 +610,9 @@ bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, i
     for(int i = 0; i < edges.size(); i++){
         int u = edges[i][0];
         int v = edges[i][1];
+
+        if(u < 0 || u >= n || v < 0 || v >= n) continue;
+
         adjacencyList[u].push_back(v);
         adjacencyList[v].push_back(u); // undirected graph
     }
