@@ -14,7 +14,41 @@
 #include <map>
 #include <set>
 
+
 using namespace std;
+class DisSubset{
+    
+private:
+    vector<int> parent;
+public:
+    DisSubset(int n){
+        parent.resize(n,-1);
+    }
+
+    int find(int u){
+        if(parent[u] < 0){
+            return u;
+        }
+        return parent[u] = find(parent[u]);
+    }
+
+    bool Union(int x, int y){
+        int xRoot = find(x);
+        int yRoot = find(y);
+        if(xRoot == yRoot){
+            return false;
+        }
+        if(parent[xRoot] < parent[yRoot]){
+            parent[xRoot] += parent[yRoot];
+            parent[yRoot] = xRoot;
+        }else{
+            parent[yRoot] += parent[xRoot];
+            parent[xRoot] = yRoot;
+        }
+        return true;
+    }
+
+};
 
 // =========================================================
 // PART A: DATA STRUCTURES (Concrete Implementations)
@@ -125,26 +159,132 @@ long long InventorySystem::countStringPossibilities(string s) {
 // =========================================================
 
 bool WorldNavigator::pathExists(int n, vector<vector<int>>& edges, int source, int dest) {
-    // TODO: Implement path existence check using BFS or DFS
-    // edges are bidirectional
+
+    if(source < 0 || source >= n || dest < 0 || dest >= n) return false;
+    if (source == dest) return true;
+
+    vector<vector<int>> adjacencyList(n);
+    for(int i = 0; i < edges.size(); i++){
+        int u = edges[i][0];
+        int v = edges[i][1];
+        adjacencyList[u].push_back(v);
+        adjacencyList[v].push_back(u); // undirected graph
+    }
+
+    vector<bool> visited(n, false);
+    queue<int> q;
+
+    visited[source] = true;
+    q.push(source);
+    
+    while(!q.empty()){
+        int u = q.front();
+        q.pop();
+        for (int v : adjacencyList[u]){
+            if (!visited[v]){
+                if (v == dest) return true;
+                visited[v] = true;
+                q.push(v);
+            }
+        }
+    }
+
     return false;
+
 }
 
 long long WorldNavigator::minBribeCost(int n, int m, long long goldRate, long long silverRate,
                                        vector<vector<int>>& roadData) {
-    // TODO: Implement Minimum Spanning Tree (Kruskal's or Prim's)
-    // roadData[i] = {u, v, goldCost, silverCost}
-    // Total cost = goldCost * goldRate + silverCost * silverRate
-    // Return -1 if graph cannot be fully connected
+
+    struct Edge {
+        int u, v;
+        long long totalCost;
+        bool operator<(const Edge& other) const {
+            return totalCost < other.totalCost;
+        }
+    };
+
+    vector<Edge> edges;
+
+    for(int i = 0; i < roadData.size(); i++){
+        int u = roadData[i][0];
+        int v = roadData[i][1];
+        long long goldCost = roadData[i][2];
+        long long silverCost = roadData[i][3];
+        long long cost = goldCost * goldRate + silverCost * silverRate;
+        edges.push_back({u, v, cost});
+    }
+
+    sort(edges.begin(), edges.end());
+
+    DisSubset ds(n);
+    long long totalCost = 0;
+    int numEdges = 0;
+
+    for(int i = 0; i < edges.size(); i++){
+        int u = edges[i].u;
+        int v = edges[i].v;
+        long long edgeCost = edges[i].totalCost;
+
+        if(ds.find(u) != ds.find(v)){
+            ds.Union(u, v);
+            totalCost += edgeCost;
+            numEdges++;
+            
+            if(numEdges == n - 1){
+                return totalCost;
+            }
+        }
+    }
+
     return -1;
 }
 
 string WorldNavigator::sumMinDistancesBinary(int n, vector<vector<int>>& roads) {
-    // TODO: Implement All-Pairs Shortest Path (Floyd-Warshall)
-    // Sum all shortest distances between unique pairs (i < j)
-    // Return the sum as a binary string
-    // Hint: Handle large numbers carefully
-    return "0";
+
+    const long long inf = 1e18;
+
+    vector<vector<long long>> dist(n, vector<long long>(n, inf));
+    for(int i = 0; i < n; i++){
+        dist[i][i] = 0;
+    }
+
+    for( int i = 0; i < roads.size(); i++){
+        int u = roads[i][0];
+        int v = roads[i][1];
+        long long w = roads[i][2];
+        dist[u][v] = w; 
+    }
+    for(int k = 0; k < n; k++){
+        for(int i = 0; i < n; i++){
+            if(dist[i][k] == inf) continue;
+            for(int j = 0; j < n; j++){
+                if(dist[k][j] == inf) continue;
+                dist[i][j] = min(dist[i][j], dist[i][k] + dist[k][j]);
+            }
+        }
+    }
+    long long sum = 0;
+    for(int i = 0; i < n; i++){
+        for(int j = i + 1; j < n; j++){
+            if(dist[i][j] == inf) continue;
+            sum += dist[i][j];
+        }
+    }
+
+    string binary = "";
+    if(sum == 0) return "0";
+
+    while(sum > 0){
+        if(sum % 2 == 1){
+            binary = "1" + binary;
+        }else{
+            binary = "0" + binary;
+        }
+        sum /= 2;
+    }
+
+    return binary;
 }
 
 // =========================================================
